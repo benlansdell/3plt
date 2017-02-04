@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>3D Hydra</title>
+    <meta name="viewport"
+	  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!--<link rel="stylesheet" href="reveal.js/css/reveal.min.css">-->
+    <link rel="stylesheet" href="reveal.js/css/reveal.min.css">
+    <!--<link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">-->
+    <link rel="stylesheet" href="cust_black.css" id="theme">
+    <link rel="stylesheet" href="reveal.js/lib/css/zenburn.css">
+    <script>
+      document.write('<link rel="stylesheet" href="reveal.js/css/print/'+(window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper')+'.css" type="text/css" media="print">');
+    </script>
+    <script src="js/three.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/KeyboardState.js"></script>
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <!-- Slides! -->
+
+    <div class="reveal">
+      <div class="slides">
+	<section>
+	  <h2>Intrinsic variance predicts performance</h2>
+	  <div class="ctr w90">
+		<canvas data-sample="scatter3"></canvas>
+		<p class="rcred">Push 'a' to toggle rotation</p>
+	  </div>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+    <!--<script src="reveal.js/js/reveal.min.js"></script>-->
+    <script src="reveal.js/js/reveal.js"></script>
+    <script src="pdfjs/compatibility.js"></script>
+    <script src="pdfjs/pdf.js"></script>
+
+    <script src="lib/js/head.min.js"></script>
+    <script>
+      head.js(
+        "lib/js/jquery.min.js",
+        "lib/js/jquery.hotkeys.js",
+        "lib/js/underscore.min.js",
+        "lib/js/swfobject.js",
+        "lib/js/dat.gui.js",
+        "lib/js/EventEmitter.js",
+
+        "lib/js/three.js",
+        "lib/js/three/EffectComposer.js",
+        "lib/js/three/RenderPass.js",
+        "lib/js/three/BloomPass.js",
+        "lib/js/three/ShaderPass.js",
+        "lib/js/three/MaskPass.js",
+
+        // three shaders
+        "lib/js/three/shaders/CopyShader.js",
+        "lib/js/three/shaders/BasicShader.js",
+        "lib/js/three/shaders/DotScreenShader.js",
+        "lib/js/three/shaders/UnpackDepthRGBAShader.js",
+        "lib/js/three/shaders/HorizontalBlurShader.js",
+        "lib/js/three/shaders/VerticalBlurShader.js",
+
+        // js files needed for WebGL specific samples (excluding three js)
+        "lib/js/J3DI.js",
+        "lib/js/J3DIMath.js",
+        "lib/js/webgl-utils.js",
+        "lib/js/webgl-debug.js",
+
+        // App specific js
+        //"js/reveal.min.js",
+        "js/stats_bootstrap.js",
+        "js/samples.js",
+        //"js/dat.gui.bootstrap.js",
+
+		function() {
+      Reveal.initialize({
+        controls: false,
+        progress: true,
+        history: true,
+        center: false,
+        keyboard: true,
+        touch: false,
+        overview: true,
+        mouseWheel: false,
+        width: 960,
+        height: 720,
+
+        theme: false, // hardcoded with CSS import in <head>
+        transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+        transitionSpeed: 'default', // default/fast/slow
+
+        math: {
+          mathjax: 'mathjax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js',
+	    condition: function() { return !document.body.classList; }},
+          { src: 'reveal.js/plugin/markdown/marked.js',
+	    condition: function() { return !!document.querySelector ('[data-markdown]'); }},
+          { src: 'reveal.js/plugin/markdown/markdown.js',
+	    condition: function() { return !!document.querySelector ('[data-markdown]'); }},
+          { src: 'reveal.js/plugin/highlight/highlight.js', async: true,
+	    callback: function() { hljs.initHighlightingOnLoad (); }},
+          { src: 'reveal.js/plugin/notes/notes.js', async: true,
+	    condition: function() { return !!document.body.classList; }},
+          { src: 'mymath.js', async: true },
+	  { src: 'pdfimgs.js', async: true },
+	  { src: 'slideautostart.js', async: true },
+        ],
+      });
+    });
+    </script>
+  </body>
+</html>
