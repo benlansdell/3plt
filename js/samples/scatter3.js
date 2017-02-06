@@ -61,30 +61,6 @@
         );
   
         //Create points based on data
-  
-        var material = new THREE.MeshPhongMaterial({ map: texture, transparent: true, opacity: 0.8 });
-        var scale = 2.5;
-        var geometry = new THREE.CubeGeometry( scale, scale, scale );
-        var mesh = new THREE.Mesh( geometry, material );
-        scene.add( mesh );
-  
-        //Draw axes
-        var geometry = new THREE.PlaneGeometry( 4, 4, 5, 5 );
-        var material = new THREE.MeshBasicMaterial( {   color: 0xffffff,
-          wireframe: true }
-        );
-        var planeX = new THREE.Mesh( geometry, material );
-        var planeY = new THREE.Mesh( geometry, material );
-        var planeZ = new THREE.Mesh( geometry, material );
-        planeX.rotation.x = -pi/2;
-        planeX.position.y -= 2;
-        planeY.rotation.y = -pi/2;
-        planeY.position.x += 2;
-        planeZ.position.z += 2;
-        scene.add( planeX );
-        scene.add( planeY );
-        scene.add( planeZ );
-
         var particles = 1000;
         var geom = new THREE.BufferGeometry();
         var positions = new Float32Array( particles * 3 );
@@ -117,6 +93,27 @@
         var mat = new THREE.PointsMaterial( { size: 0.2, vertexColors: THREE.VertexColors } );
         points = new THREE.Points( geom, mat );
         scene.add( points );
+
+        var material = new THREE.MeshPhongMaterial({ map: texture, transparent: true, opacity: 0.8 });
+        var scale = 2.5;
+        var geometry = new THREE.CubeGeometry( scale, scale, scale );
+        var mesh = new THREE.Mesh( geometry, material );
+        scene.add( mesh );
+  
+        //Draw axes
+        var size = 2;
+        var divisions = 5;
+        var gridHelperX = new THREE.GridHelper( size, divisions );
+        var gridHelperY = new THREE.GridHelper( size, divisions );
+        var gridHelperZ = new THREE.GridHelper( size, divisions );
+        gridHelperX.rotation.x = -pi/2;
+        gridHelperX.position.z -= 2;
+        gridHelperY.rotation.z = -pi/2;
+        gridHelperY.position.x += 2;
+        gridHelperZ.position.y -= 2;
+        scene.add( gridHelperX );
+        scene.add( gridHelperY );
+        scene.add( gridHelperZ );
   
         var directionalLight = new THREE.DirectionalLight ( 0xffffffff );
         directionalLight.position.set( 0, 3, 7);
