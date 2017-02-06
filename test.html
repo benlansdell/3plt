@@ -13,7 +13,10 @@
     <script>
       document.write('<link rel="stylesheet" href="reveal.js/css/print/'+(window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper')+'.css" type="text/css" media="print">');
     </script>
-    <script src="js/three.js"></script>
+
+    <!--<script src="bower_components/numjs/dist/numjs.min.js"></script>-->
+    <!--<script src="js/npy.js"></script>-->
+    <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/KeyboardState.js"></script>
     <!--[if lt IE 9]>
@@ -40,11 +43,11 @@
 	</section>
 
     <!--<script src="reveal.js/js/reveal.min.js"></script>-->
+    
     <script src="reveal.js/js/reveal.js"></script>
     <script src="pdfjs/compatibility.js"></script>
     <script src="pdfjs/pdf.js"></script>
-
-    <script src="lib/js/head.min.js"></script>
+	<script src="lib/js/head.min.js"></script>
     <script>
       head.js(
         "lib/js/jquery.min.js",
@@ -54,7 +57,7 @@
         "lib/js/dat.gui.js",
         "lib/js/EventEmitter.js",
 
-        "lib/js/three.js",
+        //"lib/js/three.js",
         "lib/js/three/EffectComposer.js",
         "lib/js/three/RenderPass.js",
         "lib/js/three/BloomPass.js",
@@ -77,6 +80,7 @@
 
         // App specific js
         //"js/reveal.min.js",
+        "js/three.js",
         "js/stats_bootstrap.js",
         "js/samples.js",
         //"js/dat.gui.bootstrap.js",
