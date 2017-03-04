@@ -31,50 +31,23 @@
       }
     }
 
-    window.samples.scatter3 = {
-
-    initialize: function(canvas) {
-    
-        //Load in data in synchronous fashion
-        //This gives a warning about loading synchronously... will have to find
-        //another solution eventually
-        data = loadJSON('test.json');
+    function loadPts(path, scene, size, xlim, ylim, zlim) {
+        var data = loadJSON('test.json');
         console.log(data);
-  
-        var scene = new THREE.Scene();
-        var theta = 0;
-        var radius = 13;
-        var speed = 0.002;
-  
-        var camera = new THREE.PerspectiveCamera( 30, sample_defaults.width / sample_defaults.height, 1, 1000 );
-        camera.position.y = 3;
-        camera.position.x = radius*Math.cos(theta);
-        camera.position.z = radius*Math.sin(theta);
-        camera.lookAt( new THREE.Vector3(0,0,0));
-
-        var texture = THREE.ImageUtils.loadTexture(
-              'images/checker_large.gif',
-              {},
-              function() {
-                animate();
-              }
-        );
-  
-        //Create points based on data
-        var particles = 1000;
+        var particles = data.length;
         var geom = new THREE.BufferGeometry();
         var positions = new Float32Array( particles * 3 );
         var colors = new Float32Array( particles * 3 );
         var color = new THREE.Color();
-        var n = 50, n2 = n / 2; // particles spread in the cube
+        var n = size, n2 = n / 2; // particles spread in the cube
         for ( var i = 0; i < positions.length; i += 3 ) {
           // positions
-          var x = Math.random() * n - n2;
-          var y = Math.random() * n - n2;
-          var z = Math.random() * n - n2;
-          positions[ i ]     = x;
-          positions[ i + 1 ] = y;
-          positions[ i + 2 ] = z;
+          var x = data[i/3][0];
+          var y = data[i/3][1];
+          var z = data[i/3][2];
+          positions[ i ]     = 2*size*(x-xlim[0])/(xlim[1] - xlim[0])-size;
+          positions[ i + 1 ] = 2*size*(y-ylim[0])/(ylim[1] - ylim[0])-size;
+          positions[ i + 2 ] = -2*size*(z-zlim[0])/(zlim[1] - zlim[0])+size;
           // colors
           var vx = ( x / n ) + 0.5;
           var vy = ( y / n ) + 0.5;
@@ -93,28 +66,63 @@
         var mat = new THREE.PointsMaterial( { size: 0.2, vertexColors: THREE.VertexColors } );
         points = new THREE.Points( geom, mat );
         scene.add( points );
-
-        var material = new THREE.MeshPhongMaterial({ map: texture, transparent: true, opacity: 0.8 });
-        var scale = 2.5;
-        var geometry = new THREE.CubeGeometry( scale, scale, scale );
-        var mesh = new THREE.Mesh( geometry, material );
-        scene.add( mesh );
-  
         //Draw axes
-        var size = 2;
         var divisions = 5;
         var gridHelperX = new THREE.GridHelper( size, divisions );
         var gridHelperY = new THREE.GridHelper( size, divisions );
         var gridHelperZ = new THREE.GridHelper( size, divisions );
         gridHelperX.rotation.x = -pi/2;
-        gridHelperX.position.z -= 2;
+        gridHelperX.position.z += 2;
         gridHelperY.rotation.z = -pi/2;
-        gridHelperY.position.x += 2;
+        gridHelperY.position.x -= 2;
         gridHelperZ.position.y -= 2;
         scene.add( gridHelperX );
         scene.add( gridHelperY );
         scene.add( gridHelperZ );
+    }
+
+    window.samples.scatter3 = {
+
+    initialize: function(canvas) {
+    
+        var scene = new THREE.Scene();
+        var theta = 0;
+        var radius = 13;
+        var speed = 0.002;
+        var rotate = false;
+        var size = 2;
+
+        var camera = new THREE.PerspectiveCamera( 30, sample_defaults.width / sample_defaults.height, 1, 1000 );
+        camera.position.y = 3;
+        camera.position.x = radius*Math.cos(theta);
+        camera.position.z = radius*Math.sin(theta);
+        camera.lookAt( new THREE.Vector3(0,0,0));
+
+        var texture = THREE.ImageUtils.loadTexture(
+              'images/checker_large.gif',
+              {},
+              function() {
+                animate();
+              }
+        );
   
+        //Create points based on data
+        //Load in data in synchronous fashion
+        //This gives a warning about loading synchronously... will have to find
+        //another solution eventually
+        path = 'test.json';
+        xlim = [0, 15];
+        ylim = [0, 15];
+        zlim = [0, 15];
+        loadPts(path, scene, size, xlim, ylim, zlim)
+
+        //Add cube
+        //var material = new THREE.MeshPhongMaterial({ map: texture, transparent: true, opacity: 0.8 });
+        //var scale = 2.5;
+        //var geometry = new THREE.CubeGeometry( scale, scale, scale );
+        //var mesh = new THREE.Mesh( geometry, material );
+        //scene.add( mesh );
+    
         var directionalLight = new THREE.DirectionalLight ( 0xffffffff );
         directionalLight.position.set( 0, 3, 7);
         scene.add( directionalLight );
@@ -129,11 +137,8 @@
         var keyboard = new KeyboardState();
   
         var instance = { active: false };
-        var rotate = true;
         var tog = true;
-  
-        //Draw points
-  
+
         function update()
         {
           keyboard.update();
