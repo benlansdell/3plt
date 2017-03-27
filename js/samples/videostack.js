@@ -8,6 +8,17 @@
         return s;
     }
 
+    function getRandomSubarray(arr, size) {
+        var shuffled = arr.slice(0), i = arr.length, min = i - size, temp, index;
+        while (i-- > min) {
+            index = Math.floor((i + 1) * Math.random());
+            temp = shuffled[index];
+            shuffled[index] = shuffled[i];
+            shuffled[i] = temp;
+        }
+        return shuffled.slice(min);
+    }
+
     function loadJSON(filePath) {
       // Load json file;
       var json = loadTextFileAjaxSync(filePath, "application/json");
@@ -36,12 +47,22 @@
       }
     }
 
-    function loadPaths(path, scene, size, imsize, nF) {
-        var data = loadJSON('paths.json');
+    function loadPaths(data, scene, size, imsize, nF, nP) {
+        
         console.log(data);
-        var nP = data.length;
+
+        data = getRandomSubarray(data, nP);
+
+        nP = data.length;
         console.log(nP);
         console.log(imsize);
+        var pts = [];
+        var ptsize = 0.2;
+
+        var ptGeometry = new THREE.BufferGeometry();
+        var ptPositions = new Float32Array( nP*3 );
+        var ptColors = new Float32Array( nP*3 );
+
         for ( var i = 0; i < nP; i++ ) {
 
           var pathlength = data[i][0].length;
@@ -53,7 +74,8 @@
           color.setRGB( vx, vy, vz );
 
           var ropeGeometry = new THREE.BufferGeometry();
-          var ropeMaterial = new THREE.LineBasicMaterial( { color: color } );
+          //var ropeMaterial = new THREE.LineBasicMaterial( { color: color, linewidth: .1 } );
+          var ropeMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
           var ropePositions = [];
           var ropeIndices = [];
 
@@ -67,17 +89,51 @@
             var py = -2*size*y/imsize+size;
             var pz = -2*size*z/nF+size;
             ropePositions.push( pz, py, px );
+
+            if (j == 0) {
+              ptPositions[3*i] = pz;
+              ptPositions[3*i+1] = py;
+              ptPositions[3*i+2] = px;
+              ptColors[3*i] = vx;
+              ptColors[3*i+1] = vy;
+              ptColors[3*i+2] = vz;
+            }
           }
 
           for ( var j = 0; j < pathlength-1; j++ ) {
             ropeIndices.push( j, j + 1 );
           }
           ropeGeometry.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
+          ropeGeometry.addAttribute( 'vertexColors', new THREE.BufferAttribute( ptColors, 3 ) );
           ropeGeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ropePositions ), 3 ) );
           ropeGeometry.computeBoundingSphere();
           rope = new THREE.LineSegments( ropeGeometry, ropeMaterial );
           scene.add( rope );
         }
+        ptGeometry.addAttribute( 'position', new THREE.BufferAttribute( ptPositions, 3 ) );
+        ptGeometry.addAttribute( 'color', new THREE.BufferAttribute( ptColors, 3 ) );
+        ptGeometry.computeBoundingBox();
+        var ptMaterial = new THREE.PointsMaterial( { size: ptsize, vertexColors: THREE.VertexColors } );
+        var pts = new THREE.Points( ptGeometry, ptMaterial );
+        scene.add(pts);
+        return pts;
+    }
+
+    function updatePoints(pts, data, size, imsize, frame, nF, nP) {
+
+      var ptPositions = pts.geometry.attributes.position.array;
+      for (i = 0; i < nP; i++) {
+        var x = data[i][0][frame];
+        var y = data[i][1][frame];
+        var z = data[i][2][frame];
+        var px = 2*size*x/imsize-size;
+        var py = -2*size*y/imsize+size;
+        var pz = -2*size*z/nF+size;
+        ptPositions[3*i] = pz;
+        ptPositions[3*i+1] = py;
+        ptPositions[3*i+2] = px;
+      }
+      pts.geometry.attributes.position.needsUpdate = true;
     }
 
     window.samples.videostack = {
@@ -88,7 +144,7 @@
         var theta = 0;
         var radius = 13;
         var speed = 0.002;
-        var rotate = false;
+        var rotate = true;
         var size = 2;
         var vidspeed = 0.03;
         var seg = 0;
@@ -105,6 +161,7 @@
         //montage frame_* -tile 250x1 -geometry 64x64 tile.jpg
         var p = 10;
         var nF = 250;
+        var nP = 150;
         var imsize = 1024;
         var nS = nF/p;
         textures = [];
@@ -146,7 +203,8 @@
         scene.add( cube );
         //scene.add( mesh );
     
-        loadPaths('', scene, size, imsize, nF)
+        var data = loadJSON('paths.json');
+        var pts = loadPaths(data, scene, size, imsize, nF, nP)
 
         var directionalLight = new THREE.DirectionalLight ( 0xffffffff );
         directionalLight.position.set( 0, 3, 7);
@@ -218,6 +276,8 @@
           //texture2.offset.x = Math.floor( time%250 )/250;
           sprite2.position.x = 2 - 4*Math.floor( time%250 )/250;
           //texture2.offset.y = Math.cos( time )/250;
+
+          updatePoints(pts, data, size, imsize, Math.floor(time%250), nF, nP);
 
           update();
           renderer.render( scene, camera );
