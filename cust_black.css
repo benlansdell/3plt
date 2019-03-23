@@ -59,8 +59,8 @@ body {
 .reveal {
   font-family: "Open Sans", sans-serif;
   font-size: 30px;
-  font-weight: 200;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  /*letter-spacing: -0.02em;*/
   color: #eeeeee; }
 
 ::selection {
@@ -84,9 +84,9 @@ body {
 .reveal h6 {
   margin: 0 0 20px 0;
   color: #fff;
-  font-family: "Source Sans Pro", Helvetica, sans-serif;
+  /*font-family: "Source Sans Pro", Helvetica, sans-serif;*/
   /*font-family: "Open Sans", Impact, sans-serif;*/
-  font-weight: 600;
+  font-weight: 400;
   line-height: 0.9em;
   letter-spacing: normal;
   text-transform: uppercase;
@@ -366,10 +366,10 @@ body {
   margin: 0 0 20px 0;
   color: #eeeeee;
   /*font-family: "Open Sans", Impact, serif;*/
-  font-family: "Montserrat", Impact, serif;
+  /*font-family: "Montserrat", Impact, serif;*/
   /*font-variant: small-caps*/;
   line-height: 0.9em;
-  letter-spacing: -0.02em;
+  /*letter-spacing: -0.02em;*/
   text-transform: none;
   text-shadow: none; 
   -webkit-hyphens: none;
@@ -451,7 +451,7 @@ body {
 .reveal h1 {
     font-size: 2em;
     margin-top: 280px;
-    text-shadow: 0px 0px 8px #000000;
+    text-shadow: 0px 0px 0px #0000ff;
 }
 
 .reveal h2 {
@@ -665,6 +665,9 @@ img#centerim {
 .column-left{ float: left; width: 33%; }
 .column-right{ float: right; width: 33%; }
 .column-center{ display: inline-block; width: 33%; }
+
+.column4{ float: left; width: 24%; }
+.column4-last{ float: right; width: 24%; }
 
 /* Fix for trailing line in MathJax renderings */
 .MathJax nobr>span.math>span{border-left-width:0 !important};
