@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Optimizing policies with thresholds in neuroscience</title>
+      <meta name="viewport"
+	  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!--<link rel="stylesheet" href="reveal.js/css/reveal.min.css">-->
+    <link rel="stylesheet" href="reveal.js/css/reveal.min.css">
+    <!--<link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">-->
+    <link rel="stylesheet" href="cust_black.css" id="theme">
+    <link rel="stylesheet" href="reveal.js/lib/css/zenburn.css">
+    <script>
+      document.write('<link rel="stylesheet" href="reveal.js/css/print/'+(window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper')+'.css" type="text/css" media="print">');
+    </script>
+    <!--<script src="js/three.js"></script>-->
+
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/KeyboardState.js"></script>
+    <script src="js/renderers/CanvasRenderers.js"></script>
+    <script type="text/x-mathjax-config">
+	    MathJax.Hub.Config({TeX: {extensions: ["color.js"]}});
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+<!-- Printing and PDF exports -->
+<script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+</script>
+  </head>
+
+  <body>
+    <!-- Slides! -->
+    <div class="reveal">
+      <div class="slides">
+        <!--<section data-background-color="#ffffff">-->
+        <section data-background="assets/brainbow2.jpg">
+          <h1>Optimizing policies with thresholds in neuroscience</h1>
+	  <hr>
+	  <p style="text-align: center; font-size: larger; text-shadow: 0px 0px 0px #0000ff;">Ben Lansdell, Bioengineering UPenn<br><br>
+	  <aside class="notes">
+	    <span style="color: red">
+	    </span> •
+	    • <span style="color: green"></span>
+	  </aside>
+        </section>
+
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+
+	
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>A basic problem</h2>
+		What is <span class="fragment highlight-green">the effect of our actions,</span> and how can we act to maximize utility?
+		<br><br>
+		<div class="fragment">
+		<ul>
+			<li> In part, a <em>causal inference</em> problem
+			<li class="fragment"> In some cases effects of actions are confounded
+		</ul>
+		</div>
+		<div class="fragment">
+		<img src="assets/chocolate.png" width="50%">
+	    <p class="rcred">Messerli, N Engl J Med 2012</p>
+		</div>
+	    <aside class="notes">
+	    <span style="color: red"></span> •
+	    So I'm going to be talking about two projects under the very general question of 'what is the effect of our actions, and how can we act to maximize utility'. This is clearly a general, ubiqitous problem in any decision making setting. I'm interested in particular in cases where the measuring the effect of our actions is in a certain sense challenging. The effect of our actions is really asking for a causal effect. We don't want to find things that are correlated with our actions, but that are caused by our actions, these are the relationships by definition we have control over, and these therefore are the things that form part of our plans. 
+
+	    Causal inference is challenging because of confounding. The old adage that correlation does not imply causation. Many examples could be chosen of course to illustrate this, but one is the following. The following relationship between chocolate consumed per capita by a country and the number of nobel prize winners of course (likely) doesn't mean that if we intervene and force people in a country to each more chocolate we would get more nobel prizes, or vice versa. Maybe... but probably this is mediated by some unobserved factors like wealth, education, GDP. Probably those are the factors we should consider, if our aim was to increase nobel prize winners.
+	    • <span style="color: green"></span>
+	  </aside>	</section>
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>Explore in two problems:</h2>
+		<ol>
+			<li class="fragment highlight-green"> Learning in neural networks with the spiking threshold
+			<li> Optimizing threshold policies
+		</ol>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So I'm going to be considering these factors in two problems that both involve using the idea of a threshold to measure a causal effect. One viewing learning in a neural network as a causal inference problem. And the other a more general model of online learning with thresholds. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Neural learning</h2>
+		<p>What is a neuron's effect on output, and how should it change to improve?</p>
+	    <img src="assets/cajal.jpg" width="45%">
+	    <p class="rcred">Golgi 1885</p>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    Ok, so starting with the neural learning. The equivalent version of our basic question is, how does a neuron know its role in an organism's output, and so how can it should change to perform better? This is an early sketch of neurons embedded in a part of the brain called the hippocampus, so we can see individual neurons in this layered network with one another.
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Neural learning</h2>
+		<p>What is a neuron's effect on output, and how should it change to improve?</p>
+	    <img src="assets/neurons3.png" width="60%">
+	  	<div id="left">
+	    <img src="assets/spike.png" width="60%">
+	    <p class="lcred">credit: Chris 73/Diberri CC</p>
+	  	</div>
+	  	<div id="right">
+			<ul>
+				<li> Neurons spike when inputs place them above a threshold
+				<li> Learning involves changing synaptic weights $w$ to improve performance/utility/reward $R$
+			</ul>
+		</div>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    If we zoom in on a particular neuron we find this tree-like structure. A neuron consists of the cell body, some root-like structures called dendrites, and a trunk like structure called the axon. The membrane of the neuron is electrically excitable. The idea is that dendrites synapse, connect, with the axons of other neurons. When sufficiently high stimulation is provided by those synapses, the neuron is excited, and sends an impulse down its own axon to neuron's that it synapses with. This impulse is known as a action potential, we can see a profile of that impulse here. The action potential, or spike, is this depolarization of the membrane that travels we a soliton of sorts along the axon. In an artifical neural network, we simplify this process to be that a neuron recieves inputs from other neurons, and weights their contribution by a set of weights w. If those weighted inputs are above a threshold, the neuron activates. This is a large simplification, but it does capture the key ideas. In this case, learning then involves modifying the synaptic weights so that the output of the network is closer to some desired output for a given context. We say that the network is trying to maximize performance, or a reward signal. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Neural learning</h2>
+		<p>What is a neuron's effect on output, and how should it change to improve?<br>
+		One challenge: correlations</p>
+	    <img src="assets/spikes.png" width="50%">
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    This is a foundational problem in neuroscience. There is still not a good answer. So there is value in being somewhat speculative, and proposing algorithms that the brain could be using to solve this problem, and then looking for evidence that this is how it's done. This is the essence of the field of computational neuroscience -- the idea of the brain as processing information and as implementing algorithms. 
+
+	    Anyway, one challenge a neuron has to face in knowing its effect on a reward signal is a complicated correlation structure. If there are many neurons with similar activity how does each neuron know its causal effect on output and performance? Not all neurons modify their synapses in response to a learning signal
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>Neural learning</h2>
+		<p>What is a neuron's effect on output, and how should it change to improve?<br>
+		Another challenge: structure</p>
+		<ul>
+			<li> One mm${}^3$ of cortex contains:
+				<ul>
+					<li>50,000 neurons
+					<li>each with ~6000 synapses with neighboring cells
+					<li>in some parts feedforward, in some parts recurrent connections
+				</ul>
+		</ul>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    The other challenge is that the structure of the brain is complicated, and must somehow self-organize to make sure that the right parts of the brain get the right feedback information they need. There are many figures that could be quoted to give a sense of this, but just to give a sense of the scales involved... [recite stats]
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background="assets/brainbow.jpg">
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    This is a current technology called brainbow that shows each neuron with a unique color. This is a slice of the hippocampus, as in the 1885 sketch I showed earlier, that shows this complicated structure. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+		<h2>The credit assignment problem</h2>
+		<p>Formalized</p>	
+		<ul>
+			<li> Inputs $\mathbf{x}, \mathbf{y}$, network output $\hat{\mathbf{y}} = f(\mathbf{x})$, weights $\mathbf{w}$.
+			<li> Aim to minimize a loss function: $\mathbb{E}(R;\mathbf{w})$
+			<li> Gradient descent-based updates: $\Delta w \propto g\left(\frac{\partial R}{\partial w}\right) = g\left(\frac{\partial R}{\partial h^i} \frac{\partial h^i}{\partial w}\right)$
+			<li> How does a neuron know $\frac{\partial R}{\partial \mathbf{h}}$?
+		</ul>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So how can we formalize this idea of the problem of how a neuron knows its effect on a reward signal, and so how to change to improve? In the literature the problem is called the credit assignment problem. It is often formalize as follows, though this formulation most directly relates to feedback networks, where there aren't recurrent connections and complicated temporal dynamics. 
+
+	    The formulation is simply that we have a set of inputs to the network, a sensory stimulus, say, a desired output y, and a generated output y hat. Let the weights of the network be w. We assume the network is trying to minimize some loss function that reflects how close the desired and generated outputs are. Both in artificial neural networks and biological neural networks, in a feedforward setting at least, it is reasonable to assume that a neuron updates its weights using some rule that is in some way a function of the reward gradient, that is, that it does some form of gradient based optimization, not necessarily stochastic gradient descent, but many have made such a proposal.
+
+	    We can of course break the gradient into two components. The dR dh component, loosely, we can think of as representing how the neuron's activity effects the reward signal. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+		<h2>The artificial neural network solution</h2>
+		The backpropagation algorithm efficiently computes gradients
+	    <img src="assets/credit.png" width="65%">
+	    <p class="rcred">Guergiuev et al eLife 2017</p>
+		<ul>
+			<li> Recursively compute:
+$$
+\mathbf{e}^i = \begin{cases} \partial R/\partial \hat{\mathbf{y}}\circ \sigma'(W^{i}\mathbf{h}^{i-1}), & i = N+1;\\
+\left((W^{i+1})^T \mathbf{e}^{i+1}\right)\circ \sigma'(W^{i}\mathbf{h}^{i-1}), & 1 \le i \le N.
+\end{cases}
+$$
+		<li> Then $\frac{\partial R}{\partial \mathbf{h}^i} = (W^{i+1})^T \mathbf{e}^{i+1}$
+		<li> Relies on the feedback network knowing $(W^i)^T$
+		<li class="fragment"> No such structure known to exist in the brain
+		</ul>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    The ANN solution is to use an algorithm called backpropagation to efficiently compute this term. This relies on a feedback having matching weights as the feedforward network. 
+	    No such structure is known to exist in the brain, so this is difficult to argue. Though there is a lot of literature on the question that does try to make the point.
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+		<h2>A more realistic solution</h2>
+		<br>
+		Neurons observe a globally distributed reward signal (e.g. dopamine)
+		<br><br>
+		<ul>
+			<li> Reinforcement learning algorithms can learn to maximize reward in this setting
+			<li> The REINFORCE algorithm correlates reward with a noisy pertubation in activity:
+				$$
+				\mathbb{E}(\tilde{R}\xi^i) \approx \frac{\partial R}{\partial h^i}
+				$$
+			<li> Requires each neuron measures an IID noise source, $\xi^i$, or somehow knows its output relative to some hypothetical <em>expected</em> output.
+		</ul>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    A more realistic solution is to not assume that any such structure exists in the brain that provides neuron specific error signal. Instead what is available to each neuron is just the reward signal itself. This is a reasonable assumption since certain neurotransmitters, like dopamine, as proposed to play that role. Then we in the domain of reinforcement learning, and there are many algorithms that can learn in this setting. One that has been explored quite a bit is an algorithm known as the REINFORCE algorithm. The method simply correlates a noisy perturbation in a neuron's output with a noisy reward signal. It can be shown that this correlation in fact approximates this loss gradient. 
+
+	    The problem with a method like this is that it requires each neuron measures and IID noise source xi. And again, it's not clear how a neuron can know that it output compared to some hyperthetical quantity, what is was expected to output. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+	  <h2>No satisfactory answer to the credit assignment problem</h2>
+	  	<ul>
+	  		<li> No structure to do anything like backprop
+	  		<li> RL approaches rely on a neuron having an independent noise source
+	  		<li> This is challenging: there are many sources of correlations in neural activity
+	  	</ul>
+
+	  	<p class="fragment"> Viewing learning as a causal inference problem may provide insight.</p>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    We should search for methods that don't require having an IID noise source, that work in the presence of correlations. This suggests we should consider the problem as one of causal inference. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+		<h2>Causality</h2>
+		<img src="assets/causality.jpg" width="50%">
+	    <p class="rcred">Peters et al 2017</p>
+		<ul>
+			<li> Defined in terms of counterfactuals or interventions
+			<li> The causal effect: $\beta = \mathbb{E}(P|A\leftarrow 1) - \mathbb{E}(P|A\leftarrow 0)$
+			<li> How can we predict the causal effect from observation?
+		</ul>	    
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    Ok, what exactly do I mean by causal inference? It was hinted at in the chocolate-nobel example. We can explain the probem a bit more by considering the following example. We observe a correlation between a gene's activity and some phenotype. We say that a causal relationship exists between gene and phen if we intervene on the activity of the gene, and observe a change in the phenotype. The other possibility is that the correlation is created by some unobserved confounder. In this case, when we intervene on gene b's activity, knocking it out, we observe no change in the phenotype. We call the 'causal effect' the expeced difference in an effects value when we intervene to turn it on vs turn it off (in the binary case, at least). A canonical problem in the field is then, how can we estimate causal effects from observational data? Without doing the randomized experiment, or the intervention. That is, what additional assumptions can be make that let us estimate beta?
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+		<h2>An observation</h2>
+		Decisions made with arbitary thresholds let us observe counterfactuals
+		<br>
+		<img src="assets/rdd.svg" width="50%">
+	    <p class="rcred">Adapted from Moscoe et al, J Clin Epid 2015</p>
+		<ul>
+			<li> Known as regression discontinuity design (RDD) in economics
+		</ul>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    We note use the following observation, finally we get to the thresholds. Decisions made with arbitary thresholds let us estiamte causal effects. The marginal populations only differ by the fact that one groups recieves the treatment, and the other does not. Thus this removes confounds and lets us measure beta. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+	  <h2>Two observations:</h2>
+	  	<ol>
+	  		<li> A neuron <em>only</em> spikes if its input is above a threshold
+	  		<li> A spike can have a measurable effect on outcome and reward
+	  	</ol>
+
+	  	<p class="fragment">Suggests regression discontinuity design can be used by a neuron to estimate its causal effect.<br><br>
+	  	
+	  	Specifically, propose a neuron approximates:
+		$$
+		\frac{\partial R}{\partial h^i}\propto \mathbb{E}(R|h^i \leftarrow 1) - \mathbb{E}(R|h^i \leftarrow 0)= \beta^i
+		$$
+		and uses RDD to estimate $\beta$.
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    This is useful in the neural learning setting. Because a neuron spikes when its input is above a threshold. In some cases at least, a spike does have a measureable effect on a reward signal. 
+
+	    This suggests a neuron could use RDD to estimate its causal effect.
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+<!-- ----------------------------------------------------------------------- 
+
+Structure:
+
+* What is the effect of our actions, and how can we act to maximize utility?
+** This is in part a *causal inference* question 
+** When intervention is difficult/unethical/expensive, an issue is confounding, unobserved factors that can affect observed correlations
+** How do we know the effect of an intervention from observation? [Jonas Peters example]
+
+* Causality
+** Definition with the notion of counterfactuals:
+** ""
+
+* Observation: Arbitrary thresholds can let us observe counterfactuals
+** Called regression discontinuity design (RDD)
+** Claim: thresholds are underutilized for causal inference in neuroscience and medicine
+
+* Explore in two problems:
+** 1. Learning in neural networks with thresholds
+** 2. Optimization in contextual bandits with thresholds
+
+Part I: Learning in neural networks with thresholds
+
+* Crash course in neuroscience: 
+** Artifical compared with actual neuron
+** Axons, dendrites, soma. 
+** Neurons spike when their input places them over a threshold
+
+* Known as the credit assignment problem
+** How does a neuron know its contribution to the outcome, and thus how to change?
+
+* One answer comes from artifical neural networks
+** ANNs learn with backpropagation-based algorithms to efficiently compute gradients
+** The gradients let each neuron in the network know its contribution to the outcome, and thus how to change
+** ANNs are the only model we have that solves problems at a human level 
+** This forces us to examine how ANNs solve problems, and if there are any analogues for how SNNs solve problems
+** A challenge because of physiological constraints on information transmission [Schematic of network]
+** Approximate backprop
+** A challenge because of spiking activity. Not differentiable
+
+* Another (more realistic) answer:
+** Reinforcement learning
+** Observe a global reward signal, communicated with a neurotransmitter, say dopamine
+** Reward-modulated STDP
+** But this does not scale to large systems
+
+* No good answer
+** There are many correlations in the brain that confound estimates, so this in fact is a problem of causal inference
+** There is at the moment no good answer
+
+* Two observations:
+** The threshold is private to the neuron
+** Spiking may have a noticable effect on an outcome
+
+* RDD in a single neuron
+** Spiking can be exploited for causal inference
+** Can operate with correlated noise sources
+** Figure
+
+* Applying RDD in a simple 2 neuron network
+** Figures
+
+* Requirements
+** RDD over a longer timespan. Constraints on timescales this enforces
+** Some of the theory for this
+
+* Simple RDD learning rule
+** The nature of the rules
+** Optimized form of rule?
+** Figure
+
+* BCI application and larger networks
+
+* Summary
+** RDD can be used to infer causal effect
+
+Part 2: How to optimize thresholds?
+
+* Cast as a contextual bandit problem
+** Examples of where this crops up
+** Show that it performs quite well (sims!)
+
+Overall summary
+* 
+
+-->
+
+	<section data-background-color='#ffffff'>
+	  <h2>RDD as a way for a neuron to solve credit assignment</h2>
+	    <img src="assets/rdd_fig1b.svg" width="80%">
+	    <p class="rcred">Lansdell and Kording, bioRxiv 2019</p>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    The idea is that it should only estimate the effect on a reward signal for inputs that place the neuron close to threshold. Over a fixed time window, we have a set of below-threshold inputs, marginally below, marginally above, and above. The idea is that neuron's should only update their estimate of beta for the marginal inputs, and that is a way of isolating that neuron's specific effect on reward. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+	  <h2>RDD as a way for a neuron to solve credit assignment</h2>
+	    <img src="assets/rdd_fig1a.svg" width="65%">
+	  	<ul>
+	  		<li> Inputs that place the neuron close to threshold are unbiased estimate of causal effect
+	  		<li> Estimate piece-wise linear model: $$R = \gamma_i + \beta_i H_i + [\alpha_{ri} H_i + \alpha_{li}(1-H_i)](Z_i - \mu)$$
+	  		<li> Can operate with correlated noise sources, no need to measure an independent noise source
+	  	</ul>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So, over a fixed time window, a neuron should only use inputs where it was within p of threshold to learn from. Using this data, we propose a neuron can estimate a piecewise linear model which it can use to infer beta. By design, this works with correlated noise sources -- it only needs to observe the reward and how close it was to spiking, it does not need to identify an IID noise source to estimate causal effects. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Demonstration on a 2 neuron network</h2>
+	    <img src="assets/fig2a.svg" width="85%">
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So how does this look in simulation? We test the idea on a simple 2 neuron network. We inject two neurons with correlated noise, xi. They have what are called leaky integrate and fire dynamics, which includes a spiking mechanism when the voltage exceeds some value theta. Each neuron runs RDD for a window size p. We can observe, if we fit a piecewise constant model the estimate becomes unbiased for small p. If we use the piece wise linear model, the estimate is in fact unbiased for large value of also. We can compare the RDD estimator to what we called the observed dependence, which takes p = 1. that is we just use all points below and above the threhsold to estimate the relationship. This is confounded for highly correlated inputs. We see on these graphs that bias. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Demonstration on a 2 neuron network</h2>
+	    <img src="assets/fig2b.svg" width="85%">
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color="#ffffff">
+	  <h2>Using $\beta$ to update weights</h2>
+
+	  	<p>Under the assumptions:</p>
+	  	<ul>
+	  		<li> Parameters only affect the reward through neuron's spiking activity, meaning $\mathbb{E}(R|H)$ is independent of parameters $\mathbf{w}$.
+	  		<li> The gradient term $\frac{\partial \mathbb{E}(H_i|H_{j\ne i})}{\partial w_i}$ is independent of $H_{j\ne i}$.
+	  		<li> Neurons $H_{j\ne i}$ satisfy the backdoor criterion with respect to $H_i \to R$.
+	  	</ul>
+	  	<p>Then:
+		$$
+		\frac{\partial R}{\partial w^i_j} \approx \frac{\partial H^i}{\partial w^i_j} \beta^i
+		$$
+	  	Caveat: Operates over timescales where a spike matters and feedback can be provided (< ~10Hz)</p> 
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    We can use the estimate of the causal effect to then update the weights for each network. Under the following assumptions, which I won't go into, the gradient of the reward wrt the weights can be approximated as, which lets us come up with a stochast gradient descent based update rule for the synaptic weights. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Learning on a 2 neuron network</h2>
+		<br><br>
+		<ul>
+			<li> Learning rule:
+				$$
+\Delta \mathbf{u}_i = \begin{cases}
+-\eta [\mathbf{u}_i^T\mathbf{a}_i - R]\mathbf{a}_i,& \theta \le Z_i < \theta + p \text{ (just spikes)};\\
+-\eta [\mathbf{u}_i^T\mathbf{a}_i + R]\mathbf{a}_i,& \theta -p < Z_i < \theta \text{ (almost spikes)},
+\end{cases}
+				$$
+			<li> Learning trajectories are less biased and converge faster
+		</ul><br><br>
+	    <img src="assets/fig4.svg" width="95%">
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    The rule takes the following form. 
+
+	    We observe the trajectories are less biased and converge faster than when using the observed dependence.
+
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Application to brain-computer interface learning</h2>
+	    <div id = "left">
+	    	<ul>
+	    		<li> Subjects can be trained to control activity of individual primary motor cortex neurons
+	    		<li> Can be done just as well for neurons involved in wrist-control, even when performing wrist movements
+	    		<li> How does the network change specifically the control neuron's activity? 
+	    		<li> Training during wrist motion introduces confounds -- must solve causal inference problem
+	    	</ul>
+		</div>
+	    <div id = "right">
+	    <img src="assets/biofeedback.svg" width="85%">
+		</div>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So, this was for 2 neurons. We can test it in a larger network and more interesting setting than an artifical reward function. 
+
+	    [Go through bullet points]
+	    We see with RDD-based learning that performance doesn't matter on the correlation of the control neuron with other wrist-controlling neurons. This is similar to empirical findings, whereas learning with the observed dependence, final performance of the network does depend on the amount of correlation.
+
+	    In training, the weights for the individual control unit are more quickly separated from the rest of the units that are doing wrist control, compared to the observed dependence. 
+
+	    Thus this recapitulates findings from BCI learning.
+
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>Part 1 summary</h2>
+		<ul>
+			<li> RDD can be used to estimate causal effects, and can provide a plausible solution to the credit assignment problem in neural networks
+			<li> Relies on the fact that neurons spike when input exceeds a threshold -- spiking is a feature not a bug
+			<li> Consistent with neurophysiology, and makes some novel predictions (see bioRxiv article for details)
+			<li> Need to test in larger/deeper neural networks
+		</ul>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>Explore in two problems:</h2>
+		<ol>
+			<li> Learning in neural networks with the spiking threshold
+			<li class="fragment highlight-green"> Optimizing threshold policies
+		</ol>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    So now we're going to change gears somewhat and focus on a more general decision making framework, in which we again use thresholds as policies. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+<!--
+
+Part 2: How to optimize thresholds?
+
+* Decisions with thresholds are common
+** Statins with high cholesterol
+** size cutoff for mole excision
+** hypertension based on blood pressure cutoff
+** surgery for scoliosis for spinal curvative above a threshold
+
+* Cast as a contextual bandit problem
+** Examples of where this crops up
+** Show that it performs quite well (sims!)
+
+Overall summary
+* 
+-->
+
+	<section data-background-color='#ffffff'>
+		<h2>Many medical decisions are made by thresholding</h2>
+		<br><br>
+		<ul>
+			<li> For example:
+				<ul>
+					<li> Statins with high cholesterol
+					<li> Treatment for hypertension based on blood pressure cutoff
+					<li> Surgery for scoliosis when spinal curvative exceeds cutoff
+					<li> Size cutoff for mole excision
+				</ul>
+		</ul>
+		<em>Assumption 1:</em> those above (below) some threshold benefit and those below (resp. above) do not
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    Outside of neural learning, thresholds are a common way of assigning treatment in medicine (also economics). Statins, hypertension, scoliosis, mole excision, there are many examples. 
+
+	    This is because of something like the assumption that those above the threshold monotonically benefit, and those below do not. The aims are thus somewhat greedy -- in these case we don't want to experiment to find out of this assumption holds, we just assume it does and act accordingly. Don't want to put patients unnecessarily at risk.
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>RDD can be used to measure causal effects</h2>
+		<img src="assets/rdduses.png" width="90%">
+		<p class="rcred">Marinescu et al 2018</p>
+		<ul>
+			<li> Under-utilized in medicine:
+			<ul>
+			<li> RCTs may be challenging, problems with external validity
+			<li> Large amounts of available data</ul>
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    We've seen that thresholds can be used, by RDD, to estimate causal effects. Thus, even without experimenting, we can gain some insight into if the policy is effective. A number of authors have argued recently that RDD is underused in medicine for this purpose.
+
+	    RDD is of course useful because randomized trials may be difficult, unethical. There may also be problems with what is called external validity: the results of an RCT may not generalize, there can be differences in the populations used for an RCT and used in practice, based on who you are able to recruit for the studies. Thus, methods that can be used to measure causal effects in systems that are already being implemented on the target population are useful. Thresholds are common, thus there is a large amount of data available.
+
+	    Underutilized because:
+	    * Availability of data
+	    * Produce insight were RCTs are not possible
+	    * RCTs cannot always generalize to the audience which it will actually be applied to: external validity
+	    * Can use a large amount of existing data
+	    * Threats to external validity: 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Adaptive thresholds</h2>
+		<img src="assets/rdd2.svg" width="45%">
+		<ul><li>Want to both learn effects and maximize utility
+		<li>Some considerations
+		<ol>
+			<li> When treatment is already implemented, may not be possible to conduct an RCT
+			<li> Want to learn the optimal threshold quickly
+			<li> Don't want to experiment excessively
+			<li> Don't want to change policy excessively
+		</ol></ul>
+		<span class="fragment">How can these be balanced?</span>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+
+	    A consideration we'll explore is that often thresholds are used where there is this greedy aim: benefit as many people as possible given current knowledge, minimize unnecessary exploration. Thus we can suppose that wherever it is useful to use RDD to measure the effect of a threshold policy, there is also a need to optimize that policy to maximize the benefit to the target population. So, how can we learn an optimal threshold??
+
+	    Some considerations are:
+	    * do want to learn quickly
+	    * but, do not want to change policy unless certain it will improve things
+	    * do not want to change policy excessively, as changes in policy (advice distributed to doctors, etc) can be expensive to implement.
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Multi-armed bandits</h2>
+		<img src="assets/bandit.png" width="90%">
+		<ul>
+			<li> Choose from a set of actions at each round
+			<li> Only observe reward for action chosen
+			<li> How to allocate time exploring new options vs exploiting current best option?
+			<li> Originally developed as a model for adaptive clinical trials
+			<li> Also used for:
+				<ul>
+					<li> Targeted advertizing
+					<li> Website A/B testing
+					<li> Routing problems, portfolio construction
+				</ul>
+		</ul>
+		<span class="fragment">Can use bandit theory to study threshold optimization algorithms</span>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    The field that deals with balancing these sort of considerations is the multi-armed bandit setting. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Multi-armed bandits</h2>
+		<ul>
+			<li> $T$ rounds in a trial
+			<li> For each $t\in[1,T]$:
+			<ol><li> Choose action $a_t \in \mathcal{A}, |\mathcal{A}| = k$
+			<li> Observe reward $y_t$</ol>
+			<li> Aim to maximze reward:
+				$$
+				\mathcal{Y}_T = \sum^T_{t=1}\mathbb{E}(y_t)
+				$$
+			<li> Same as minimizing regret:
+				$$
+				R_T = \mu^{*}T - \sum^T_{t=1}\mu^{a_t}
+				$$
+			<li> Basic question: asymptotic behavior of regret with $T$. <br>Want sub-linear regret
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    This is formalized as follows: [explain points]
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Contextual multi-armed bandits</h2>
+		<ul>
+			<li> $T$ rounds in a trial
+			<li> For each $t\in[1,T]$:
+			<ol><li> Observe $s_t\in\mathcal{D}\subset\mathbb{R}^d$, choose action $a_t \in \mathcal{A}, |\mathcal{A}| = k$
+			<li> Observe reward $y_t$</ol>
+			<li> Aim to maximze reward:
+				$$
+				\mathcal{Y}_T = \sum^T_{t=1}\mathbb{E}(y_t)
+				$$
+			<li> Same as minimizing regret:
+				$$
+				R_T = \sum^T_{t=1}\mu^{*}(s_t) - \mu^{a_t}(s_t)
+				$$
+			<li> Basic question: asymptotic behavior of regret with $T$. <br>Want sub-linear regret
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    In a threshold policy, we ofcourse are basing out decision on some information for the subject at each round. This is captured by what is called a contextual multi-armed bandit. Which includes this additional state information s.
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>"Threshold" policies</h2>
+		<ul>
+			<li> <em>Assumption 2:</em> linear contextual bandit
+				$$
+				y_t = s_t \theta^{a_t} + \eta_t
+				$$
+			<li> The optimal policy takes the form:
+				$$
+				a_t^* = \pi^*(s_t) = \text{argmax}_a s_t \theta^{a},
+				$$
+			<li> Consider a family of policies parameterized in the same way:
+				$$
+				a_t = \pi(s_t) = \text{argmax}_a s_t \tilde{\theta}^{a}_t,
+				$$
+				for parameters $\tilde{\theta}^a_t$.
+			<li> Implicitly defines piece-wise linear decision boundaries. <br>In a 1D context this is a simple threshold
+		</ul>
+		<img src="assets/demo_threshold_1.svg" width="50%">
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    To test this, we build just a toy model of a threshold policy learner. It's a toy because we make the following linearity assumption.
+
+	    Assuming linearity the optimal policy takes the form
+
+	    And so here we will consider policies that take the same form for some parameters thete tilde that define the policy.
+
+	    In a 1D context this is just a simple threshold, as we've been discussing, but obviously this generalizes to higher dimensions and more arms, choices.
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		How to update $\{\tilde{\theta}^a_t\}$ to balance considerations?<br>
+		<span class="fragment"><p><em>Idea:</em> only update $\{\tilde{\theta}^a_t\}$ when justified</p>
+		<ul>
+			<li> Maintain estimates of payoff of each arm:
+$$
+\begin{align*}
+V_t^a &= \lambda I + \sum_{s\in T_t^a} \mathbf{s}_s\mathbf{s}_s^T,\quad
+\hat{\theta}_t^a = V_t^a(\lambda)^{-1}\sum_{s\in T_t^a}y_s\mathbf{s}_s,
+\end{align*}
+				$$
+			<li> Define a confidence set in which $\theta$ plausibily lies:
+				$$
+				\mathcal{C}_t^a = \{\mathbf{x}\in\mathbb{R}^d:\|\hat{\theta}^a_{t-1} - \mathbf{x} \|^2_{V_{t-1}^a} \le \beta_t^a\}
+				$$
+		</ul>
+		<img src="assets/demo_threshold.svg" width="50%"></span>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+
+	    	    So the question is, how we can balance these consideration we outlined for this set of policies? 
+
+	    The basic idea is that we simply only update the theta tildes when justified, in this way we minimize experimentation
+
+	    Here, when justified is determined by tracking an estimate of the linear relationship under each arm, and a measure of certainty about that relationship. In this case this is just simple linear regression, and we defined a confidence set in which the true theta parameters lie with a certain probability. 
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<br><br>
+		<ul>
+			<li> <em>Theorem:</em> A threshold algorithm that maintains $\{\tilde{\theta}^a\}\in\mathcal{C}_t^a \forall t$ has expected regret:
+			$$
+			R_T \le C\sqrt{T\log(TL)}
+			$$
+			for constant $C>0$ and for $\|\theta\| \le L$.
+			<li> The greedy algorithm ($\tilde{\theta}^a_t = \hat{\theta}^a_t$) and LinUCB satisfy the same bound
+			<li> Caveat: This does not prove sub-linear regret almost surely
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    This is useful because any threshold algorithm that maintains its theta tildes within the confidence interval is a feasible algorithm, and thus shares its good expected regret behavior.
+
+	    Other common algorithms are also feasible algorithms
+
+	    An important caveat is that these results prove the expected regret bounds, but don't establish sub-linear regret almost surely. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<img src="assets/demo_threshold_threshcons.svg" width="65%">
+		<ul>
+			<li> Consideration 3: "don't experiment excessively"
+				$$
+				\tilde{\theta}^a_{t+1} = \text{Proj}_{\mathcal{C}_{t+1}^a}(\tilde{\theta}^a_{t})
+				$$
+				Threshold conservative
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    Given these results we can now turn to specific threshold algorithms that address the considerations we outlined earlier. 
+
+	    For instance, the consideration 3 was that we shouldn't experiment excessively. One possible choice of an algorithm that fulfils this is to put theta_tilde only as much as is needed keep it within the confidence set. This is the projection of the parameters onto the set. We call this the threshold conservative algorithm.
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<img src="assets/demo_threshold_threshgreedy.svg" width="65%">
+		<ul>
+			<li> Consideration 4: "don't change policy excessively"
+				$$
+				\tilde{\theta}^a_{t+1} = \begin{cases}
+					\tilde{\theta}^a_{t}, & \tilde{\theta}^a_{t} \in\mathcal{C}_{t+1}^a \\
+					\hat{\theta}^a_t, & \text{else}.
+				\end{cases}
+				$$
+				Threshold greedy
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    Another option, if the concern is more the _number_ of changes to the policy is, whenever the estimates fall out of the confidence set is to update it to the current best estimate of the arm parameters theta_hat. This should reduce the number of changes to the policy, compared to the threshold conservative approach, where the parameters are updated only to the boundary of the confidence set, and will likely then be updated again in the next couple of rounds. 
+
+	    Though it reduces the number of policy changes, this choice of updating to theta_hat isn't necessarily the update that will _minimize_ the number of expected changes to the policy while still being a feasible algorithm. As far as I'm aware, the algorithm that has that property is an interesting open problem. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Performance in simulations</h2>
+		<img src="assets/compare_methods_traces.svg" width="85%">
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    We can compare the performance of these thresold algorithms to common benchmarks, here for 2 arms, and 5 dimensionsal context space, where we run the algorithm many times for random arm parameters and random initial theta_tildes. We compare it to the greedy algorithm, which just takes theta_hat = theta_tilde, and to a common algorithm called the LinUCB algorithm.
+
+	    The expected regret for both threshold algorithms is slightly higher than the greedy algorithm, but much lower than the common LinUCB. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Performance in simulations</h2>
+		<br>
+			    <img src="assets/compare_methods_pol_changes_traces.svg" width="90%">
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    Importantly, when we think about these more conservative considerations in wanting our updates to definitely improve performance, or to reduce the number of changes to policy, then we see the threshold algorithm results in signifcantly fewer changes to the policy. 
+
+	    Implicitly, most algorithms, including the greedy algorithm and the LinUCB algorithm change their policy every round, we can make them challenging to implement in some cases. Here we show you can still get good performance by updating thresholds not every round, and in some cases in significantly fewer rounds. 
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background="assets/brainbow2.jpg">
+		<h2>Summary of Part 2</h2>
+		<br><br>
+		<ul>
+			<li> Assuming linearity, we can understand and construct algorithms that efficiently learn optimal thresholds with significantly fewer changes to policy 
+			<li> A simple model of how many policy decisions are made in medicine
+			<li> Can extend to non-linear models
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+
+	    Thus, we've seen that thresholds are useful tools to infer causal effects, and we can understand something about how threshold policies can be optimized, both in neural networks and in other applications to maximize utility. In the future I expect RDD to be more common in medicine, neuroscience and economics. 
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+
+	<section data-background-image="./assets/brainbow2.jpg">
+	  <h2>Acknowledgments</h2>
+	  	<hr>
+	  <div id="left">
+     <ul>
+     	 <li> Konrad Kording
+         <li> Kording lab</li><ul>
+         	<li> Ari Benjamin </li>
+         	<li> David Rolnick</li>
+         	<li> Roozbeh Farhoodi</li></ul>
+	  	</ul>
+   	  </div>
+	  <div id="right">
+	  	<ul>
+         <li> Sofia Triantafillou (Pitt)</li><ul>
+	  	</ul>
+   	  </div>
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Is this realistic?</h2>
+	    	<ul> <li> Consistent with:
+	    		<ul>
+	    		<li> current models of sub-threshold dependent plasticity
+	    		<li> current models of neuromodulator dependent plasticity</ul>
+	    	</ul>
+	    <img src="assets/fig5a.svg" width="55%">
+	    	<ul class="fragment">
+	    		<li> Additionally would predict super-threshold dependent plasticity
+	    	</ul>
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    Of course, we can ask if it is realistic for a neuron to do something like RDD-based learning? In fact, there are two components to the model really. The first is the only learning for inputs that plcae the neuron close to threshold. This is in part already established under something called sub-threshold dependent plasticity. Inputs that place a neuron too far below threhsold induce no learning, consistent with RDD. The model would additionally predict that very high super threshold inputs also induce no learning, but this hasn't been explicitly tested yet. 
+
+	    The other part of the model is the reward dependent component, in which the sign of the update switches with the magnitude of the reward signal. This has been established in some cases, but more experiments are also needed. Here the blue and red curves show the sign of the changes to weights for different neuromodulator concentrations, showing things can turn from potentiating (increasing) to depressing (decreasing). 
+
+	    Thus both aspects are largely consistent with neurobiology. 
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>How to test?</h2>
+	    	<ul>
+	    		<li> Over a fixed time window a reward is administered when neuron spikes
+	    		<li> Stimuli are identified which place the neuron's input drive close to spiking threshold. 
+	    		<li> RDD-based learning predicts an increase synaptic changes for a set of stimuli containing a high proportion of near threshold inputs, but that keeps overall firing rate constant.
+	    	</ul>
+	    <img src="assets/fig5b.svg" width="55%">
+
+	  <aside class="notes">
+	    <span style="color: red"></span> •
+	    How would we test RDD-based learning? One idea would be [idea]
+		• <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Conservative contextual multi-armed bandits</h2>
+		<p>Recent work on learning while being:</p>
+		<ul>
+			<li> Risk-averse -- avoid highly varying outcomes:<br>
+				Vakili et al 2016, Sani et al 2013, David et al 2016, Zimin et al 2014
+			<li> Conservative -- only change policy if will improve outcome with certain confidence:<br>
+				Wu et al 2016, Katariya et al 2018, Kazerouni et al 2017
+			<li> Greedy -- only act to maximize reward given current knowledge, no exploration:<br>
+				Bastani et al 2017, Kannan et al 2018
+		</ul>
+		<p>Recent empircal comparison (Bietti et al 2018) showed greedy algorithms perform well. Suggests threshold policies with minimal exploration may perform well</p>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    With recent concerns about AI safety, there is a lot of recent work on learning within certain safety constraints. For instance, [go through]. 
+
+	    In fact recent comparisons of bandit algorithms show greedy algorithms do quite well in practice. This suggests that a threshold policy, which is greedy in spirit, may perform well.
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<br><br>
+		<ul>
+			<li> Let $\mathcal{E}_t$ be the event:
+$$
+\mathcal{E}_t = \cap_{n = 1}^t\{\theta \in \mathcal{C}_n\}.
+$$
+			<li> 
+				<em>Theorem: [Lattimore 2018. Thm 20.2]</em> For any $\delta \in (0,1)$, with probability at least $1-\delta$, it holds that for all $t\in \mathbb{N}_+$,
+$$
+\|\hat{\theta} - \theta\|_{V_t^a} < \sqrt{\lambda}\|\theta\| + \sqrt{2\log\left(\frac{1}{\delta}\right) + \log\left(\frac{\det V_t^a}{\lambda^d}\right)}.
+$$
+Also, for $\|\theta\| \le L$ then $\mathbb{P}(\mathcal{E}_t) \ge 1-\delta$ with $\mathcal{C}_t^a$ defined using
+$$
+\beta_t^a = \sqrt{\lambda}L + \sqrt{2\log\left(\frac{1}{\delta}\right) + \log\left(\frac{\det V_t^a}{\lambda^d}\right)}.
+$$
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    	    Studying learning of theta_hat in this case is complicated by the fact that we don't passively observe data, but the arms that we chose and hence the data we observe depends on the learning algorithm. We can't just use simple least squares regression theory to prove convergence or construct confidence bounds in this case. 
+
+	    Nonetheless, results are available in the following form. Let E be the event that the true parameters lie in the confidence bounds for all rounds up to t.
+
+	    Then, for any delta, it holds that with probability at least 1 - delta, E occurs, that is, the confidence set holds if we define beta in the following way.
+
+	    Thus we can construct these confidence intervals.
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<br><br>
+		<ul>
+			<li> Call any algorithm which always plays the unambiguously better arm for any context in which there is one a <em>feasible algorithm</em>
+		</ul>
+		<img src="assets/demo_threshold_2.svg" width="65%">
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    Given these intervals, we can establish regret bounds for the following family of policies. 
+
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<br><br>
+		<ul>
+			<li> <em>Theorem:</em>
+With probability at least $1-\delta$, the (pseudo-)regret of any policy learned by a feasible algorithm is bounded by
+$$
+\hat{R}_T \le \sqrt{8dT\beta_T\log\left(\frac{\text{trace}(V_0) + TL^2}{d\det^{1/d}(V_0)}\right)}.
+$$
+			<li> <em>Corollary:</em> Choosing $\delta = 1/T$, the expected regret obeys
+$$
+R_T \le Cd\sqrt{T}\log(TL),
+$$
+for constant $C > 0$ and $L$.
+
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    The result, essentially is that we have order sqrt(t)log(t) regret.
+
+	    This is a fairly simple extension of currently available regret bounds for a particular algorithm called the Linear Upper confidence bound algorithm.
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+	<section data-background-color='#ffffff'>
+		<h2>Optimizing threshold policies</h2>
+		<br><br>
+		<ul>
+			<li> A threshold algorithm that maintains $\{\tilde{\theta}^a\}\in\mathcal{C}_t^a \forall t$ is a feasible algorithm.
+			<li> Thus $\mathcal{O}(\sqrt{T\log(T)})$ expected regret
+			<li> The greedy algorithm ($\tilde{\theta}^a_t = \hat{\theta}^a_t$) and LinUCB are also feasible algorithms
+			<li> Caveat: This does not prove sub-linear regret almost surely
+		</ul>
+		<aside class="notes">
+	    <span style="color: red"></span> •
+	    This is useful because any threshold algorithm that maintains its theta tildes within the confidence interval is a feasible algorithm, and thus shares its good expected regret behavior.
+
+	    Other common algorithms are also feasible algorithms
+
+	    An important caveat is that these results prove the expected regret bounds, but don't establish sub-linear regret almost surely. 
+	    • <span style="color: green"></span>
+	  </aside>
+	</section>
+
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+
+    <!--<script src="reveal.js/js/reveal.min.js"></script>-->
+    <script src="reveal.js/js/reveal.js"></script>
+    <script src="pdfjs/compatibility.js"></script>
+    <script src="pdfjs/pdf.js"></script>
+
+    <script src="lib/js/head.min.js"></script>
+    <script>
+      head.js(
+        "lib/js/jquery.min.js",
+        "lib/js/jquery.hotkeys.js",
+        "lib/js/underscore.min.js",
+        "lib/js/swfobject.js",
+        "lib/js/dat.gui.js",
+        "lib/js/EventEmitter.js",
+
+        //"lib/js/three.js",
+        "lib/js/three/EffectComposer.js",
+        "lib/js/three/RenderPass.js",
+        "lib/js/three/BloomPass.js",
+        "lib/js/three/ShaderPass.js",
+        "lib/js/three/MaskPass.js",
+
+        // three shaders
+        "lib/js/three/shaders/CopyShader.js",
+        "lib/js/three/shaders/BasicShader.js",
+        "lib/js/three/shaders/DotScreenShader.js",
+        "lib/js/three/shaders/UnpackDepthRGBAShader.js",
+        "lib/js/three/shaders/HorizontalBlurShader.js",
+        "lib/js/three/shaders/VerticalBlurShader.js",
+
+        // js files needed for WebGL specific samples (excluding three js)
+        "lib/js/J3DI.js",
+        "lib/js/J3DIMath.js",
+        "lib/js/webgl-utils.js",
+        "lib/js/webgl-debug.js",
+
+        // App specific js
+        //"js/reveal.min.js",
+        "js/stats_bootstrap.js",
+        "js/samples.js",
+        //"js/dat.gui.bootstrap.js",
+
+		function() {
+      Reveal.initialize({
+        controls: false,
+        progress: true,
+        history: true,
+        center: false,
+        keyboard: true,
+        touch: false,
+        overview: true,
+        mouseWheel: false,
+        width: 960,
+        height: 720,
+
+        theme: false, // hardcoded with CSS import in <head>
+        transition: 'fade', // default/cube/page/concave/zoom/linear/fade/none
+        transitionSpeed: 'default', // default/fast/slow
+
+        math: {
+          mathjax: 'mathjax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js',
+	    condition: function() { return !document.body.classList; }},
+          { src: 'reveal.js/plugin/markdown/marked.js',
+	    condition: function() { return !!document.querySelector ('[data-markdown]'); }},
+          { src: 'reveal.js/plugin/markdown/markdown.js',
+	    condition: function() { return !!document.querySelector ('[data-markdown]'); }},
+          { src: 'reveal.js/plugin/highlight/highlight.js', async: true,
+	    callback: function() { hljs.initHighlightingOnLoad (); }},
+          { src: 'reveal.js/plugin/notes/notes.js', async: true,
+	    condition: function() { return !!document.body.classList; }},
+          { src: 'mymath.js', async: true },
+	  { src: 'pdfimgs.js', async: true },
+	  { src: 'slideautostart.js', async: true },
+        ],
+      });
+    });
+    </script>
+  </body>
+</html>
